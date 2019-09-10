@@ -22,7 +22,7 @@ func runHCLFmt(terragruntOptions *options.TerragruntOptions) error {
 	terragruntOptions.Logger.Printf("Formatting terragrunt.hcl files from the directory tree %s.", terragruntOptions.WorkingDir)
 
 	workingDir := terragruntOptions.WorkingDir
-	tgHclFiles, err := zglob.Glob(util.JoinPath(workingDir, "**", "*.hcl"))
+	tgHclFiles, err := zglob.Glob(util.JoinPath(workingDir, "**", "*.hcl","*.hcl.json"))
 	if err != nil {
 		return err
 	}

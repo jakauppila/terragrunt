@@ -19,6 +19,7 @@ import (
 )
 
 const DefaultTerragruntConfigPath = "terragrunt.hcl"
+const DefaultTerragruntJsonConfigPath = "terragrunt.hcl.json"
 
 // TerragruntConfig represents a parsed and expanded configuration
 type TerragruntConfig struct {
@@ -292,11 +293,14 @@ func ParseConfigFile(filename string, terragruntOptions *options.TerragruntOptio
 //    blocks, which are only scoped to be available within the defining config.
 func ParseConfigString(configString string, terragruntOptions *options.TerragruntOptions, includeFromChild *IncludeConfig, filename string) (*TerragruntConfig, error) {
 	// Parse the HCL string into an AST body that can be decoded multiple times later without having to re-parse
+
 	parser := hclparse.NewParser()
-	file, err := parseHcl(parser, configString, filename)
+
+	file, err :=  parseHcl(parser, configString, filename)
 	if err != nil {
 		return nil, err
 	}
+
 
 	// Decode just the Base blocks. See the function docs for DecodeBaseBlocks for more info on what base blocks are.
 	localsAsCty, terragruntInclude, includeForDecode, err := DecodeBaseBlocks(terragruntOptions, parser, file, filename, includeFromChild)
@@ -414,12 +418,23 @@ func parseHcl(parser *hclparse.Parser, hcl string, filename string) (file *hcl.F
 		}
 	}()
 
-	file, parseDiagnostics := parser.ParseHCL([]byte(hcl), filename)
-	if parseDiagnostics != nil && parseDiagnostics.HasErrors() {
-		return nil, parseDiagnostics
+	if filepath.Ext(filename) == ".hcl" {
+		file, parseDiagnostics := parser.ParseHCL([]byte(hcl), filename)
+		if parseDiagnostics != nil && parseDiagnostics.HasErrors() {
+			return nil, parseDiagnostics
+		}
+	
+		return file, nil
+	}else if filepath.Ext(filename) == ".json" {
+		file, parseDiagnostics := parser.ParseJSON([]byte(hcl), filename)
+		if parseDiagnostics != nil && parseDiagnostics.HasErrors() {
+			return nil, parseDiagnostics
+		}
+	
+		return file, nil
+	}else{
+		return file, nil
 	}
-
-	return file, nil
 }
 
 // Merge the given config with an included config. Anything specified in the current config will override the contents
